@@ -17,5 +17,5 @@ mv glove.840B.300d.zip data/
 
 # Convert tree format
 # cd preprocess
-python sentiment_trees.py
-python load_embeddings.py
+# python sentiment_trees.py
+# python load_embeddings.py
