@@ -13,7 +13,7 @@ if ! [ `command -v virtualenv` ]
 then
 	sudo pip2.7 install virtualenv
 fi
-sudo rm -rf $VENV
+rm -rf $VENV
 virtualenv $VENV -p /usr/bin/python2.7
 source $VENV/bin/activate
 
