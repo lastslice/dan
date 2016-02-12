@@ -1,10 +1,10 @@
 from numpy import *
 import cPickle, zipfile
 
-vec_file = zipfile.ZipFile('../data/glove.840B.300d.zip', 'r').open('glove.840B.300d.txt', 'r')
+vec_file = zipfile.ZipFile('../../data/glove.840B.300d.zip', 'r').open('glove.840B.300d.txt', 'r')
 all_vocab = {}
 print 'loading vocab...'
-wmap = cPickle.load(open('../data/sentiment/wordMapAll.bin', 'rb'))
+wmap = cPickle.load(open('../../data/sentiment/wordMapAll.bin', 'rb'))
 revMap = {}
 for word in wmap:
     revMap[wmap[word]] = word
@@ -39,4 +39,4 @@ print 'num unknowns: ', len(unknown)
 print We.shape
 
 print 'dumping...'
-cPickle.dump(We, open('../data/sentiment_We', 'wb'), protocol=cPickle.HIGHEST_PROTOCOL)
+cPickle.dump(We, open('../../data/sentiment_We', 'wb'), protocol=cPickle.HIGHEST_PROTOCOL)

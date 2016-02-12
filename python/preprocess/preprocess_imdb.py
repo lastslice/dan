@@ -6,10 +6,10 @@ import random
 def compute_vocab():
     vocab = []
     vdict = {}
-    trneg = glob('../data/aclimdb/train/neg/*.txt')
-    trpos = glob('../data/aclimdb/train/pos/*.txt')
-    tneg = glob('../data/aclimdb/test/neg/*.txt')
-    tpos = glob('../data/aclimdb/test/pos/*.txt')
+    trneg = glob('../../data/aclimdb/train/neg/*.txt')
+    trpos = glob('../../data/aclimdb/train/pos/*.txt')
+    tneg = glob('../../data/aclimdb/test/neg/*.txt')
+    tpos = glob('../../data/aclimdb/test/pos/*.txt')
 
     split = []
     for fold in [trneg, trpos, tneg, tpos]:
@@ -61,7 +61,7 @@ def compute_vocab():
         print i, train[x][1], ' '.join(vocab[x] for x in train[x][0])
         print '\n'
 
-    cPickle.dump([train, test, vocab, vdict], open('../data/aclimdb/imdb_splits', 'wb'), \
+    cPickle.dump([train, test, vocab, vdict], open('../../data/aclimdb/imdb_splits', 'wb'), \
                  protocol=cPickle.HIGHEST_PROTOCOL)
 
 

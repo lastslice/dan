@@ -134,9 +134,9 @@ if __name__ == '__main__':
 
     # command line arguments
     parser = argparse.ArgumentParser(description='sentiment DAN')
-    parser.add_argument('-data', help='location of dataset', default='data/sentiment/')
-    parser.add_argument('-vocab', help='location of vocab', default='data/sentiment/wordMapAll.bin')
-    parser.add_argument('-We', help='location of word embeddings', default='data/sentiment_We')
+    parser.add_argument('-data', help='location of dataset', default='../data/sentiment/')
+    parser.add_argument('-vocab', help='location of vocab', default='../data/sentiment/wordMapAll.bin')
+    parser.add_argument('-We', help='location of word embeddings', default='../data/sentiment_We')
     parser.add_argument('-rand_We', help='randomly init word embeddings', type=int, default=0)
     parser.add_argument('-binarize', help='binarize labels', type=int, default=0)
     parser.add_argument('-d', help='word embedding dimension', type=int, default=300)
@@ -155,7 +155,7 @@ if __name__ == '__main__':
                          epochs', type=int, default=50)
     parser.add_argument('-lr', help='adagrad initial learning rate', type=float, default=0.005)
     parser.add_argument('-o', '--output', help='desired location of output model', \
-                        default='models/sentiment_params.pkl')
+                        default='../models/sentiment_params.pkl')
 
     args = vars(parser.parse_args())
     d = args['d']

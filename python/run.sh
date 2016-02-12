@@ -16,6 +16,6 @@ curl -O http://www-nlp.stanford.edu/data/glove.840B.300d.zip
 mv glove.840B.300d.zip data/
 
 # Convert tree format
-cd preprocess
+# cd preprocess
 python sentiment_trees.py
 python load_embeddings.py

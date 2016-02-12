@@ -111,7 +111,7 @@ def buildWordMap():
     to integer values.
     """
     words = collections.defaultdict(int)
-    ddir = '../data/sentiment/'
+    ddir = '../../data/sentiment/'
 
     for file in [ddir + 'train.txt', ddir + 'dev.txt', ddir + 'test.txt']:
         print "Reading trees.."
@@ -127,7 +127,7 @@ def buildWordMap():
     wordMap = dict(zip(words.iterkeys(), xrange(len(words))))
     wordMap[UNK] = len(words)  # Add unknown as word
 
-    with open('../data/sentiment/wordMapAll.bin', 'w') as fid:
+    with open('../../data/sentiment/wordMapAll.bin', 'w') as fid:
         cPickle.dump(wordMap, fid)
 
     return wordMap
@@ -138,7 +138,7 @@ def loadTrees(dataSet='train', wmap=loadWordMap):
     Loads training trees. Maps leaf node words to word ids.
     """
     wordMap = wmap
-    file = '../data/sentiment/%s.txt' % dataSet
+    file = '../../data/sentiment/%s.txt' % dataSet
     print "Reading trees.."
     with open(file, 'r') as fid:
         trees = [Tree(l) for l in fid.readlines()]
@@ -159,7 +159,7 @@ def process_trees(wmap):
     for split in ['train', 'dev', 'test']:
         trees = loadTrees(dataSet=split, wmap=wmap)
         print len(trees)
-        cPickle.dump(trees, open('../data/sentiment/' + split + '_alltrees', 'wb'), protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(trees, open('../../data/sentiment/' + split + '_alltrees', 'wb'), protocol=cPickle.HIGHEST_PROTOCOL)
 
 
 def acquire_all_phrases(tree, phrases):
@@ -172,9 +172,9 @@ if __name__ == '__main__':
     wmap = buildWordMap()
     print 'num words: ', len(wmap)
     process_trees(wmap)
-    train = cPickle.load(open('../data/sentiment/train_alltrees', 'rb'))
-    dev = cPickle.load(open('../data/sentiment/dev_alltrees', 'rb'))
-    test = cPickle.load(open('../data/sentiment/test_alltrees', 'rb'))
+    train = cPickle.load(open('../../data/sentiment/train_alltrees', 'rb'))
+    dev = cPickle.load(open('../../data/sentiment/dev_alltrees', 'rb'))
+    test = cPickle.load(open('../../data/sentiment/test_alltrees', 'rb'))
 
     revMap = {}
     for k, v in wmap.iteritems():
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     for sent, label in t_sents:
         c[label] += 1
     print c
-    cPickle.dump(t_sents, open('../data/sentiment/train-rootfine', 'wb'))
+    cPickle.dump(t_sents, open('../../data/sentiment/train-rootfine', 'wb'))
 
     # store both phrases and roots for dev / test
     dev_sents = []
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     for sent, label in dev_sents:
         c[label] += 1
     print c
-    cPickle.dump(dev_sents, open('../data/sentiment/dev-rootfine', 'wb'))
+    cPickle.dump(dev_sents, open('../../data/sentiment/dev-rootfine', 'wb'))
 
     test_sents = []
     for tree in test:
@@ -223,4 +223,4 @@ if __name__ == '__main__':
     for sent, label in test_sents:
         c[label] += 1
     print c
-    cPickle.dump(test_sents, open('../data/sentiment/test-rootfine', 'wb'))
+    cPickle.dump(test_sents, open('../../data/sentiment/test-rootfine', 'wb'))
