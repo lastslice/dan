@@ -21,7 +21,7 @@ for line in vec_file:
 print len(wmap), len(all_vocab)
 d = len(all_vocab['the'])
 
-We = empty( (d, len(wmap)) )
+We = empty((d, len(wmap)))
 
 print 'creating We for ', len(wmap), ' words'
 unknown = []
@@ -39,4 +39,4 @@ print 'num unknowns: ', len(unknown)
 print We.shape
 
 print 'dumping...'
-cPickle.dump( We, open('../data/sentiment_We', 'wb'), protocol=cPickle.HIGHEST_PROTOCOL)
+cPickle.dump(We, open('../data/sentiment_We', 'wb'), protocol=cPickle.HIGHEST_PROTOCOL)

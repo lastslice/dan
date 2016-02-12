@@ -1,4 +1,3 @@
-from numpy import *
 from util.sentiment_util import *
 from util.math_util import *
 from util.adagrad import Adagrad
@@ -7,7 +6,6 @@ from collections import Counter
 
 # compute model accuracy on a given fold
 def validate(data, fold, params, deep, f=relu):
-
     correct = 0.
     total = 0.
 
@@ -19,7 +17,7 @@ def validate(data, fold, params, deep, f=relu):
         av = average(params[-1][:, sent], axis=1)
 
         # forward prop
-        acts = zeros((deep, dh))  
+        acts = zeros((deep, dh))
         for i in range(0, deep):
             start = i * 2
             prev = av if i == 0 else acts[i - 1]
@@ -41,14 +39,15 @@ def validate(data, fold, params, deep, f=relu):
     print 'accuracy on ', fold, correct, total, str(correct / total), '\n'
     return correct / total
 
-# does both forward and backprop
-def objective_and_grad(data, params, d, dh, len_voc, deep, labels, f=relu, df=drelu, compute_grad=True, word_drop=0.3, rho=1e-4, fine_tune=True):
 
+# does both forward and backprop
+def objective_and_grad(data, params, d, dh, len_voc, deep, labels, f=relu, df=drelu, compute_grad=True, word_drop=0.3,
+                       rho=1e-4, fine_tune=True):
     params = unroll_params(params, d, dh, len_voc, deep=deep, labels=labels)
     grads = init_grads(d, dh, len_voc, deep=deep, labels=labels)
     error_sum = 0.0
 
-    for sent,label in data:
+    for sent, label in data:
 
         if len(sent) == 0:
             continue
@@ -107,7 +106,7 @@ def objective_and_grad(data, params, d, dh, len_voc, deep, labels, f=relu, df=dr
                 delta = deriv * prev_delta
 
                 if i > 0:
-                    grads[start] += outer(delta, acts[i-1])
+                    grads[start] += outer(delta, acts[i - 1])
                     grads[start + 1] += delta
                     prev_delta = params[start].T.dot(delta)
 
@@ -137,7 +136,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='sentiment DAN')
     parser.add_argument('-data', help='location of dataset', default='data/sentiment/')
     parser.add_argument('-vocab', help='location of vocab', default='data/sentiment/wordMapAll.bin')
-    parser.add_argument('-We', help='location of word embeddings', default='data/sentiment_all_We')
+    parser.add_argument('-We', help='location of word embeddings', default='data/sentiment_We')
     parser.add_argument('-rand_We', help='randomly init word embeddings', type=int, default=0)
     parser.add_argument('-binarize', help='binarize labels', type=int, default=0)
     parser.add_argument('-d', help='word embedding dimension', type=int, default=300)
@@ -148,7 +147,7 @@ if __name__ == '__main__':
     parser.add_argument('-labels', help='number of labels', type=int, default=5)
     parser.add_argument('-ft', help='fine tune word vectors', type=int, default=1)
     parser.add_argument('-b', '--batch_size', help='adagrad minibatch size (ideal: 25 minibatches \
-                        per epoch). for provided datasets, x for history and y for lit', type=int,\
+                        per epoch). for provided datasets, x for history and y for lit', type=int, \
                         default=15)
     parser.add_argument('-ep', '--num_epochs', help='number of training epochs, can also determine \
                          dynamically via validate method', type=int, default=5)
@@ -156,16 +155,16 @@ if __name__ == '__main__':
                          epochs', type=int, default=50)
     parser.add_argument('-lr', help='adagrad initial learning rate', type=float, default=0.005)
     parser.add_argument('-o', '--output', help='desired location of output model', \
-                         default='models/sentiment_params.pkl')
+                        default='models/sentiment_params.pkl')
 
     args = vars(parser.parse_args())
     d = args['d']
     dh = args['dh']
 
     # load data
-    train = cPickle.load(open(args['data']+'train-rootfine', 'rb'))
-    dev = cPickle.load(open(args['data']+'dev-rootfine', 'rb'))
-    test = cPickle.load(open(args['data']+'test-rootfine', 'rb'))
+    train = cPickle.load(open(args['data'] + 'train-rootfine', 'rb'))
+    dev = cPickle.load(open(args['data'] + 'dev-rootfine', 'rb'))
+    test = cPickle.load(open(args['data'] + 'test-rootfine', 'rb'))
     vocab = cPickle.load(open(args['vocab'], 'rb'))
     len_voc = len(vocab)
 
@@ -192,7 +191,7 @@ if __name__ == '__main__':
     params = init_params(d, dh, deep=args['deep'], labels=args['labels'])
 
     # add We matrix to params
-    params += (orig_We, )
+    params += (orig_We,)
     r = roll_params(params)
 
     dim = r.shape[0]
@@ -210,21 +209,21 @@ if __name__ == '__main__':
 
         # create mini-batches
         random.shuffle(train)
-        batches = [train[x : x + args['batch_size']] for x in xrange(0, len(train), 
-                   args['batch_size'])]
+        batches = [train[x: x + args['batch_size']] for x in xrange(0, len(train),
+                                                                    args['batch_size'])]
 
         epoch_error = 0.0
         ep_t = time.time()
         for batch_ind, batch in enumerate(batches):
             now = time.time()
-            err, grad = objective_and_grad(batch, r, d, dh, len_voc, 
-                args['deep'], args['labels'], word_drop=args['drop'], 
-                fine_tune=args['ft'], rho=args['rho'])
+            err, grad = objective_and_grad(batch, r, d, dh, len_voc,
+                                           args['deep'], args['labels'], word_drop=args['drop'],
+                                           fine_tune=args['ft'], rho=args['rho'])
 
             update = ag.rescale_update(grad)
             r = r - update
             lstring = 'epoch: ' + str(epoch) + ' batch_ind: ' + str(batch_ind) + \
-                    ' error, ' + str(err) + ' time = '+ str(time.time()-now) + ' sec'
+                      ' error, ' + str(err) + ' time = ' + str(time.time() - now) + ' sec'
             log.write(lstring + '\n')
             log.flush()
             epoch_error += err
@@ -233,16 +232,16 @@ if __name__ == '__main__':
         print time.time() - ep_t
         print 'done with epoch ', epoch, ' epoch error = ', epoch_error, ' min error = ', min_error
         lstring = 'done with epoch ' + str(epoch) + ' epoch error = ' + str(epoch_error) \
-                 + ' min error = ' + str(min_error) + '\n'
+                  + ' min error = ' + str(min_error) + '\n'
         log.write(lstring)
         log.flush()
 
         # save parameters if the current model is better than previous best model
         if epoch_error < min_error:
             min_error = epoch_error
-            params = unroll_params(r, d, dh, len_voc, deep = args['deep'], labels=args['labels'])
+            params = unroll_params(r, d, dh, len_voc, deep=args['deep'], labels=args['labels'])
             # d_score = validate(dev, 'dev', params, args['deep'])
-            cPickle.dump( params, open(param_file, 'wb'))
+            cPickle.dump(params, open(param_file, 'wb'))
 
         log.flush()
 
@@ -253,5 +252,5 @@ if __name__ == '__main__':
     log.close()
 
     # compute test score
-    params = unroll_params(r, d, dh, len_voc, deep = args['deep'], labels=args['labels'])
+    params = unroll_params(r, d, dh, len_voc, deep=args['deep'], labels=args['labels'])
     t_score = validate(test, 'test', params, args['deep'])

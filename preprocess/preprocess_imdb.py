@@ -2,6 +2,7 @@ from glob import glob
 import cPickle
 import random
 
+
 def compute_vocab():
     vocab = []
     vdict = {}
@@ -38,7 +39,6 @@ def compute_vocab():
             fold_docs.append(doc)
         split.append(fold_docs)
 
-
     train = []
     test = []
     for i in range(0, len(split)):
@@ -61,9 +61,8 @@ def compute_vocab():
         print i, train[x][1], ' '.join(vocab[x] for x in train[x][0])
         print '\n'
 
-    cPickle.dump([train, test, vocab, vdict], open('../data/aclimdb/imdb_splits', 'wb'),\
-        protocol=cPickle.HIGHEST_PROTOCOL)
-
+    cPickle.dump([train, test, vocab, vdict], open('../data/aclimdb/imdb_splits', 'wb'), \
+                 protocol=cPickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':

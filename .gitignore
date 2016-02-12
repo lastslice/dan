@@ -1,3 +1,33 @@
-data/
-models/
+.DS_Store
+*.swp
+*.lock
+
+####
+# R: files R Studio creates but should not checked into the repository
+#
+.RData
+.Rhistory
+.Rproj.user
+
+####
+# Python: files python creates
+#
 *.pyc
+*.egg-info
+mlp/dist/
+mlp/build/
+ipython-analysis/.ipynb_checkpoints
+ipython-analysis/models/
+.venv
+
+####
+# Scala
+#
+.idea
+target
+
+####
+# Downloaded data & trained models
+#
+data
+models
