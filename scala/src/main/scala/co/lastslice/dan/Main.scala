@@ -10,42 +10,22 @@ object Main {
     println("Loading model..")
     val bufferedSource = Source.fromFile("../python/models/dan.csv")
     val r = bufferedSource.getLines.map(_.toDouble)
-
     val params = unrollParams(r.toArray)
+
+    println("Loading data points")
+    val bufferedDataSource = Source.fromFile("../python/models/data-points.csv")
+    val d = bufferedDataSource.getLines().map(x => x.split(",").reverse.toList) map {
+      case head :: tail => tail.map(_.toDouble) -> head.toInt
+    }
+
+    val dataPoints = d.map {
+      case (sent, label) => DanModel.DataPoint(new BDM(sent.size, 1, sent.toArray), label)
+    }.toList
+
+    DanModel.validate(dataPoints.take(1), params, "test")
 
     () // must return unit :(
   }
-
-  /**
-    * Python
-
-  def unroll_params(arr, d, dh, len_voc, deep=1, labels=2, wv=True):
-
-    mat_size = dh * dh
-    ind = 0
-
-    params = []
-    if deep > 0:
-        params.append(arr[ind : ind + d * dh].reshape( (dh, d) ))
-        ind += d * dh
-        params.append(arr[ind : ind + dh].reshape( (dh, ) ))
-        ind += dh
-
-        for i in range(1, deep):
-            params.append(arr[ind : ind + mat_size].reshape( (dh, dh) ))
-            ind += mat_size
-            params.append(arr[ind : ind + dh].reshape( (dh, ) ))
-            ind += dh
-
-    params.append(arr[ind: ind + labels * dh].reshape( (labels, dh)))
-    ind += dh * labels
-    params.append(arr[ind: ind + labels].reshape( (labels, )))
-    ind += labels
-    if wv:
-        params.append(arr[ind : ind + len_voc * d].reshape( (d, len_voc)))
-    return params
-
-    */
 
   def unrollParams(r: Array[Double], d: Int = 300, dh: Int = 300, lenVoc: Int = 19539, deep: Int = 3, labels: Int = 5, wv: Boolean = true): List[BDM[Double]] = {
     val matSize = dh * dh

@@ -6,12 +6,40 @@ import cPickle, time, argparse
 from collections import Counter
 
 
+def save_data(data, file_name="models/data-points.csv"):
+    str_iterator = ("%s,%s\n" % (",".join(map(str,x)),y) for x,y in data)
+    with open(file_name, 'w') as f:
+        for line in str_iterator:
+            f.writelines(line)
+
+
 def load_model(file_name):
     try:
+        print "loading paramters from file %s" % file_name
         return np.loadtxt(file_name)
 
     except FileNotFoundError:
         return None
+
+
+def feed_forward(sent, label, params, dh, deep, f):
+    av = average(params[-1][:, sent], axis=1)
+    # forward prop
+    acts = zeros((deep, dh))
+    for i in range(0, deep):
+        start = i * 2
+        prev = av if i == 0 else acts[i - 1]
+        acts[i] = f(params[start].dot(prev) + params[start + 1])
+
+    Ws = params[deep * 2]
+    bs = params[deep * 2 + 1]
+    if deep == 0:
+        pred = softmax(Ws.dot(av) + bs).ravel()
+
+    else:
+        pred = softmax(Ws.dot(acts[-1]) + bs).ravel()
+
+    return pred
 
 
 # compute model accuracy on a given fold
@@ -24,22 +52,7 @@ def validate(data, fold, params, deep, f=relu):
         if len(sent) == 0:
             continue
 
-        av = average(params[-1][:, sent], axis=1)
-
-        # forward prop
-        acts = zeros((deep, dh))
-        for i in range(0, deep):
-            start = i * 2
-            prev = av if i == 0 else acts[i - 1]
-            acts[i] = f(params[start].dot(prev) + params[start + 1])
-
-        Ws = params[deep * 2]
-        bs = params[deep * 2 + 1]
-        if deep == 0:
-            pred = softmax(Ws.dot(av) + bs).ravel()
-
-        else:
-            pred = softmax(Ws.dot(acts[-1]) + bs).ravel()
+        pred = feed_forward(sent, label, params, dh, deep, f)
 
         if argmax(pred) == label:
             correct += 1
