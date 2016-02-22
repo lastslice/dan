@@ -1,8 +1,46 @@
+import numpy as np
 from util.sentiment_util import *
 from util.math_util import *
 from util.adagrad import Adagrad
 import cPickle, time, argparse
 from collections import Counter
+
+
+def save_data(data, file_name="models/data-points.csv"):
+    str_iterator = ("%s,%s\n" % (",".join(map(str,x)),y) for x,y in data)
+    with open(file_name, 'w') as f:
+        for line in str_iterator:
+            f.writelines(line)
+
+
+def load_model(file_name):
+    try:
+        print "loading paramters from file %s" % file_name
+        return np.loadtxt(file_name)
+
+    except FileNotFoundError:
+        return None
+
+
+def feed_forward(sent, label, params, dh, deep, f):
+    av = average(params[-1][:, sent], axis=1)
+    # forward prop
+    acts = zeros((deep, dh))
+    for i in range(0, deep):
+        start = i * 2
+        prev = av if i == 0 else acts[i - 1]
+        acts[i] = f(params[start].dot(prev) + params[start + 1])
+
+    Ws = params[deep * 2]
+    bs = params[deep * 2 + 1]
+    if deep == 0:
+        pred = softmax(Ws.dot(av) + bs).ravel()
+
+    else:
+        pred = softmax(Ws.dot(acts[-1]) + bs).ravel()
+
+    return pred
+
 
 # compute model accuracy on a given fold
 def validate(data, fold, params, deep, f=relu):
@@ -14,22 +52,7 @@ def validate(data, fold, params, deep, f=relu):
         if len(sent) == 0:
             continue
 
-        av = average(params[-1][:, sent], axis=1)
-
-        # forward prop
-        acts = zeros((deep, dh))
-        for i in range(0, deep):
-            start = i * 2
-            prev = av if i == 0 else acts[i - 1]
-            acts[i] = f(params[start].dot(prev) + params[start + 1])
-
-        Ws = params[deep * 2]
-        bs = params[deep * 2 + 1]
-        if deep == 0:
-            pred = softmax(Ws.dot(av) + bs).ravel()
-
-        else:
-            pred = softmax(Ws.dot(acts[-1]) + bs).ravel()
+        pred = feed_forward(sent, label, params, dh, deep, f)
 
         if argmax(pred) == label:
             correct += 1
@@ -156,6 +179,7 @@ if __name__ == '__main__':
     parser.add_argument('-lr', help='adagrad initial learning rate', type=float, default=0.005)
     parser.add_argument('-o', '--output', help='desired location of output model', \
                         default='../models/sentiment_params.pkl')
+    parser.add_argument('-m', '--model', help='loads model paramters from csv file', default="models/dan.csv")
 
     args = vars(parser.parse_args())
     d = args['d']
@@ -190,67 +214,76 @@ if __name__ == '__main__':
     # generate params / We
     params = init_params(d, dh, deep=args['deep'], labels=args['labels'])
 
-    # add We matrix to params
-    params += (orig_We,)
-    r = roll_params(params)
+    log = open(log_file, 'w')
+
+    r = load_model(args['model'])
 
     dim = r.shape[0]
     print 'parameter vector dimensionality:', dim
-
-    log = open(log_file, 'w')
 
     # minibatch adagrad training
     ag = Adagrad(r.shape, args['lr'])
     min_error = float('inf')
 
-    for epoch in range(0, args['num_epochs']):
 
-        lstring = ''
+    if r is None:
+        # add We matrix to params
+        params += (orig_We,)
+        r = roll_params(params)
 
-        # create mini-batches
-        random.shuffle(train)
-        batches = [train[x: x + args['batch_size']] for x in xrange(0, len(train),
-                                                                    args['batch_size'])]
+        # train
+        for epoch in range(0, args['num_epochs']):
 
-        epoch_error = 0.0
-        ep_t = time.time()
-        for batch_ind, batch in enumerate(batches):
-            now = time.time()
-            err, grad = objective_and_grad(batch, r, d, dh, len_voc,
-                                           args['deep'], args['labels'], word_drop=args['drop'],
-                                           fine_tune=args['ft'], rho=args['rho'])
+            lstring = ''
 
-            update = ag.rescale_update(grad)
-            r = r - update
-            lstring = 'epoch: ' + str(epoch) + ' batch_ind: ' + str(batch_ind) + \
-                      ' error, ' + str(err) + ' time = ' + str(time.time() - now) + ' sec'
-            log.write(lstring + '\n')
+            # create mini-batches
+            random.shuffle(train)
+            batches = [train[x: x + args['batch_size']] for x in xrange(0, len(train),
+                                                                        args['batch_size'])]
+
+            epoch_error = 0.0
+            ep_t = time.time()
+            for batch_ind, batch in enumerate(batches):
+                now = time.time()
+                err, grad = objective_and_grad(batch, r, d, dh, len_voc,
+                                               args['deep'], args['labels'], word_drop=args['drop'],
+                                               fine_tune=args['ft'], rho=args['rho'])
+
+                update = ag.rescale_update(grad)
+                r = r - update
+                lstring = 'epoch: ' + str(epoch) + ' batch_ind: ' + str(batch_ind) + \
+                          ' error, ' + str(err) + ' time = ' + str(time.time() - now) + ' sec'
+                log.write(lstring + '\n')
+                log.flush()
+                epoch_error += err
+
+            # done with epoch
+            print time.time() - ep_t
+            print 'done with epoch ', epoch, ' epoch error = ', epoch_error, ' min error = ', min_error
+            lstring = 'done with epoch ' + str(epoch) + ' epoch error = ' + str(epoch_error) \
+                      + ' min error = ' + str(min_error) + '\n'
+            log.write(lstring)
             log.flush()
-            epoch_error += err
 
-        # done with epoch
-        print time.time() - ep_t
-        print 'done with epoch ', epoch, ' epoch error = ', epoch_error, ' min error = ', min_error
-        lstring = 'done with epoch ' + str(epoch) + ' epoch error = ' + str(epoch_error) \
-                  + ' min error = ' + str(min_error) + '\n'
-        log.write(lstring)
-        log.flush()
+            # save parameters if the current model is better than previous best model
+            if epoch_error < min_error:
+                min_error = epoch_error
+                params = unroll_params(r, d, dh, len_voc, deep=args['deep'], labels=args['labels'])
+                # d_score = validate(dev, 'dev', params, args['deep'])
+                cPickle.dump(params, open(param_file, 'wb'))
 
-        # save parameters if the current model is better than previous best model
-        if epoch_error < min_error:
-            min_error = epoch_error
-            params = unroll_params(r, d, dh, len_voc, deep=args['deep'], labels=args['labels'])
-            # d_score = validate(dev, 'dev', params, args['deep'])
-            cPickle.dump(params, open(param_file, 'wb'))
+            log.flush()
 
-        log.flush()
+            # reset adagrad weights
+            if epoch % args['adagrad_reset'] == 0 and epoch != 0:
+                ag.reset_weights()
 
-        # reset adagrad weights
-        if epoch % args['adagrad_reset'] == 0 and epoch != 0:
-            ag.reset_weights()
+        log.close()
 
-    log.close()
+        # save model in csv file
+        np.savetxt("models/dan.csv", r)
 
     # compute test score
     params = unroll_params(r, d, dh, len_voc, deep=args['deep'], labels=args['labels'])
     t_score = validate(test, 'test', params, args['deep'])
+
