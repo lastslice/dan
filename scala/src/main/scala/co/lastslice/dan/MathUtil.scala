@@ -5,13 +5,12 @@ import breeze.numerics._
 
 object MathUtil {
 
-  def softmax(w: DenseMatrix[Double]): DenseMatrix[Double] = softmax(w)
-
-  def relu(x: DenseMatrix[Double]): DenseMatrix[Double] = {
-    println(dim(x))
-    println(dim(drelu(x)))
-    x :* drelu(x)
+  def softmax(w: DenseMatrix[Double]): DenseMatrix[Double] = {
+    val expW = exp(w)
+    expW / sum(expW)
   }
+
+  def relu(x: DenseMatrix[Double]): DenseMatrix[Double] = x :* drelu(x)
 
   def drelu(x: DenseMatrix[Double]): DenseMatrix[Double] = (x :> 0.0).map(if (_) 1.0 else 0.0)
 

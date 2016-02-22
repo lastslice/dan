@@ -22,7 +22,7 @@ object Main {
       case (sent, label) => DanModel.DataPoint(new BDM(sent.size, 1, sent.toArray), label)
     }.toList
 
-    DanModel.validate(dataPoints.take(1), params, "test")
+    DanModel.validate(dataPoints, params, "test")
 
     () // must return unit :(
   }
